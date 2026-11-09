@@ -13,8 +13,6 @@ env:
   REGION: europe-west1
   REPOSITORY: tclothes
   IMAGE: tclothes
-  INSTANCE: tclothes-app
-  ZONE: europe-west1-b
 
 jobs:
   deploy:
@@ -36,14 +34,6 @@ jobs:
           IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE}:${GITHUB_SHA}"
           docker build --tag "$IMAGE_URI" .
           docker push "$IMAGE_URI"
-          echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
-      - name: Deploy on VM through IAP
-        env:
-          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-        run: >-
-          gcloud compute ssh "$INSTANCE"
-          --project "$PROJECT_ID"
-          --zone "$ZONE"
-          --tunnel-through-iap
-          --quiet
-          --command="sudo /usr/local/bin/deploy-tclothes '${IMAGE_URI}'"
+          LATEST_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE}:latest"
+          docker tag "$IMAGE_URI" "$LATEST_URI"
+          docker push "$LATEST_URI"

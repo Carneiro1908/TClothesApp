@@ -34,6 +34,12 @@ resource "google_compute_disk" "data" {
   type    = "pd-balanced"
 }
 
+resource "google_compute_address" "public" {
+  project = var.project_id
+  name    = "tclothes-public"
+  region  = var.region
+}
+
 resource "google_service_account" "vm" {
   project      = var.project_id
   account_id   = "tclothes-vm"
@@ -44,6 +50,14 @@ resource "google_project_iam_member" "vm_artifact_reader" {
   project = var.project_id
   role    = "roles/artifactregistry.reader"
   member  = "serviceAccount:${google_service_account.vm.email}"
+}
+
+resource "google_artifact_registry_repository_iam_member" "github_deployer_writer" {
+  project    = var.project_id
+  location   = var.region
+  repository = google_artifact_registry_repository.app.repository_id
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:tclothes-github-deploy@${var.project_id}.iam.gserviceaccount.com"
 }
 
 resource "google_secret_manager_secret" "auth_secret" {
@@ -97,7 +111,9 @@ resource "google_compute_instance" "app" {
 
   network_interface {
     network = "default"
-    access_config {}
+    access_config {
+      nat_ip = google_compute_address.public.address
+    }
   }
 
   metadata_startup_script = file("${path.module}/startup.sh")
@@ -136,4 +152,4 @@ resource "google_compute_firewall" "iap_ssh" {
 output "instance_name" { value = google_compute_instance.app.name }
 output "instance_zone" { value = google_compute_instance.app.zone }
 output "artifact_registry" { value = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}" }
-output "public_ip" { value = google_compute_instance.app.network_interface[0].access_config[0].nat_ip }
+output "public_ip" { value = google_compute_address.public.address }
