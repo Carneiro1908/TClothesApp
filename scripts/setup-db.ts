@@ -27,7 +27,7 @@ function loadEnv(envPath: string) {
 
 loadEnv(path.join(process.cwd(), '.env.local'));
 
-const DB_PATH = path.join(process.cwd(), 'tclothes.db');
+const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), 'tclothes.db');
 
 async function main() {
   console.log('🔧 Setting up TClothes database...\n');

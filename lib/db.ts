@@ -5,7 +5,7 @@ let db: Database.Database | null = null;
 
 export function getDb(): Database.Database {
   if (!db) {
-    const dbPath = path.join(process.cwd(), 'tclothes.db');
+    const dbPath = process.env.DATABASE_PATH || path.join(process.cwd(), 'tclothes.db');
     db = new Database(dbPath);
 
     // Enable WAL mode for better concurrency
