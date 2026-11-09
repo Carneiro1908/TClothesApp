@@ -1,10 +1,16 @@
 # GCP infrastructure and deployment
 
-This setup runs the Next.js app on one Compute Engine VM and stores its SQLite database on a separately attached persistent disk. Terraform creates the VM, disk, Artifact Registry repository, firewall rule, VM service account, and two empty Secret Manager secrets. GitHub Actions builds and deploys each push to `main`.
+This setup runs the Next.js app on one Compute Engine VM and stores its SQLite database on a separately attached persistent disk. Terraform creates the VM, disk, Artifact Registry repository, firewall rule, VM service account, and app secrets.
+
+## Current deployment
+
+The project `tclothes-prod-20261109` is provisioned in `europe-west1-b`. The app is available at `https://aquiles-design.duckdns.org` with automatic TLS from Caddy; its IP is `35.240.66.47`. The SQLite database and generated sample products are on the persistent disk. The admin username is `admin`; its generated password is stored in Secret Manager as `tclothes-admin-password` and can be retrieved by an authorized account with `gcloud secrets versions access latest --secret=tclothes-admin-password --project=tclothes-prod-20261109`.
+
+Workload Identity Federation for the GitHub repository is configured, but automatic GitHub deploy is not yet enabled: the deploy service account lacks IAM permissions to publish and update the VM. The project-level VM administration, OS Login, and IAP grants were blocked by automatic review. The current live deployment was completed manually using the project owner session.
 
 ## Provision infrastructure
 
-1. Install Terraform and authenticate with `gcloud auth application-default login`.
+1. Install Terraform and authenticate with `gcloud auth application-default login`. Link an open billing account to the project first; GCP refuses to enable Compute Engine, Artifact Registry, and Secret Manager APIs without billing.
 2. Copy `terraform.tfvars.example` to `terraform.tfvars`, set `project_id`, and run:
 
    ```sh
@@ -20,16 +26,14 @@ This setup runs the Next.js app on one Compute Engine VM and stores its SQLite d
    printf %s 'https://your-domain.example' | gcloud secrets versions add tclothes-nextauth-url --data-file=-
    ```
 
-4. Add GitHub repository secrets: `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER` (full provider resource name), and `GCP_DEPLOY_SERVICE_ACCOUNT` (service account email).
-5. Configure Workload Identity Federation for this repository. Grant its deploy service account permission to push to the `tclothes` Artifact Registry repository and use IAP/OS Login to reach the VM (`roles/compute.instanceAdmin.v1`, `roles/compute.osAdminLogin`, `roles/iap.tunnelResourceAccessor`). Restrict the identity provider to this repository and the `main` branch.
-6. Push to `main` or run **Deploy to Google Cloud** manually in GitHub Actions.
+4. Add GitHub repository secrets: `GCP_PROJECT_ID=tclothes-prod-20261109`, `GCP_WORKLOAD_IDENTITY_PROVIDER=projects/462165420055/locations/global/workloadIdentityPools/github/providers/github`, and `GCP_DEPLOY_SERVICE_ACCOUNT=tclothes-github-deploy@tclothes-prod-20261109.iam.gserviceaccount.com`. The pool/provider and service account already exist and trust only `Carneiro1908/TClothesApp` on `main`.
+5. Grant the deploy service account Artifact Registry write access and the permissions required by the deployment method before enabling the GitHub workflow.
+6. Push to `main` or run **Deploy to Google Cloud** manually in GitHub Actions after those permissions are granted.
 
-The VM image installs the Google Cloud CLI on first boot. The deploy service account needs access to Artifact Registry; the VM service account has image pull access and access to only the two app secrets. The first deploy can take a few minutes while startup completes. Open the Terraform `public_ip` output on port 80.
+The VM image installs the Google Cloud CLI on first boot. The VM service account has image pull access and access to the app secrets.
 
 ## Important application setup
 
-The app's current `scripts/setup-db.ts` seeds a default admin account if `ADMIN_USERNAME` and `ADMIN_PASSWORD` are unset. After the first deploy, connect to the VM through IAP and run `sudo docker exec -e ADMIN_USERNAME='your-admin' -e ADMIN_PASSWORD='a-long-unique-password' tclothes npm run setup` once. Do not use its fallback password in production. The app requires the GitHub deploy service account to have `roles/artifactregistry.writer`, `roles/compute.instanceAdmin.v1`, `roles/compute.osAdminLogin`, and `roles/iap.tunnelResourceAccessor`; limit its Workload Identity Federation trust to this repository and `main`.
-
-The source imports `better-sqlite3` but the current `package.json` and lockfile do not declare it. Add and commit that dependency and regenerated `package-lock.json` before the first workflow run; otherwise `npm ci` / the Docker build cannot complete. The local environment could not reach npm to resolve it.
+The `better-sqlite3` runtime dependency and its TypeScript declarations are included in `package.json` and `package-lock.json`.
 
 This is a single-VM deployment. The SQLite data survives VM replacement because it lives on a separately managed disk. Take regular disk snapshots/backups before production use.

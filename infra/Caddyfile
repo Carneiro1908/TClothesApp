@@ -1,0 +1,4 @@
+aquiles-design.duckdns.org {
+  encode zstd gzip
+  reverse_proxy tclothes:3000
+}

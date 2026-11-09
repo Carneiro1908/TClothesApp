@@ -11,9 +11,9 @@ provider "google" {
 }
 
 resource "google_project_service" "apis" {
-  for_each = toset(["compute.googleapis.com", "artifactregistry.googleapis.com", "secretmanager.googleapis.com"])
-  project  = var.project_id
-  service  = each.value
+  for_each           = toset(["compute.googleapis.com", "artifactregistry.googleapis.com", "secretmanager.googleapis.com"])
+  project            = var.project_id
+  service            = each.value
   disable_on_destroy = false
 }
 
@@ -105,7 +105,7 @@ resource "google_compute_instance" "app" {
     email  = google_service_account.vm.email
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
-  tags = ["tclothes-web"]
+  tags       = ["tclothes-web"]
   depends_on = [google_project_service.apis]
 }
 
@@ -115,7 +115,7 @@ resource "google_compute_firewall" "web" {
   network = "default"
   allow {
     protocol = "tcp"
-    ports    = ["80"]
+    ports    = ["80", "443"]
   }
   source_ranges = ["0.0.0.0/0"]
   target_tags   = ["tclothes-web"]

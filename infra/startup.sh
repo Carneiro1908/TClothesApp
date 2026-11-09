@@ -17,6 +17,21 @@ grep -q "$UUID" /etc/fstab || echo "UUID=$UUID /data ext4 defaults,nofail 0 2" >
 mount -a
 chmod 0777 /data
 
+docker network inspect tclothes-public >/dev/null 2>&1 || docker network create tclothes-public
+mkdir -p /opt/caddy
+cat >/opt/caddy/Caddyfile <<'CADDY'
+aquiles-design.duckdns.org {
+  encode zstd gzip
+  reverse_proxy tclothes:3000
+}
+CADDY
+docker pull caddy:2-alpine
+docker rm -f caddy || true
+docker run -d --name caddy --restart unless-stopped --network tclothes-public \
+  -p 80:80 -p 443:443 \
+  -v /opt/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
+  -v caddy_data:/data -v caddy_config:/config caddy:2-alpine
+
 cat >/usr/local/bin/deploy-tclothes <<'DEPLOY'
 #!/bin/bash
 set -euo pipefail
@@ -25,10 +40,12 @@ PROJECT=$(curl -fsH 'Metadata-Flavor: Google' http://metadata.google.internal/co
 gcloud auth configure-docker "$(echo "$IMAGE" | cut -d/ -f1)" --quiet
 docker pull "$IMAGE"
 docker rm -f tclothes || true
-docker run -d --name tclothes --restart unless-stopped -p 80:3000 -v /data:/data \
+docker run -d --name tclothes --restart unless-stopped --network tclothes-public -v /data:/data \
   -e AUTH_SECRET="$(gcloud secrets versions access latest --secret=tclothes-auth-secret --project="$PROJECT")" \
   -e NEXTAUTH_SECRET="$(gcloud secrets versions access latest --secret=tclothes-auth-secret --project="$PROJECT")" \
   -e NEXTAUTH_URL="$(gcloud secrets versions access latest --secret=tclothes-nextauth-url --project="$PROJECT")" \
+  -e AUTH_URL="$(gcloud secrets versions access latest --secret=tclothes-nextauth-url --project="$PROJECT")" \
+  -e AUTH_TRUST_HOST=true \
   "$IMAGE"
 DEPLOY
 chmod +x /usr/local/bin/deploy-tclothes

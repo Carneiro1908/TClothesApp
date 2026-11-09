@@ -1,14 +1,22 @@
-import { auth } from './lib/auth';
+import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export default auth((req: NextRequest & { auth: unknown }) => {
+const SESSION_COOKIE = 'next-auth.session-token';
+
+export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+    cookieName: SESSION_COOKIE,
+    secureCookie: false,
+  });
 
   // Allow login page
   if (pathname === '/admin/login') {
     // If already logged in, redirect to dashboard
-    if (req.auth) {
+    if (token) {
       return NextResponse.redirect(new URL('/admin/dashboard', req.url));
     }
     return NextResponse.next();
@@ -16,7 +24,7 @@ export default auth((req: NextRequest & { auth: unknown }) => {
 
   // Protect all /admin routes
   if (pathname.startsWith('/admin')) {
-    if (!req.auth) {
+    if (!token) {
       const loginUrl = new URL('/admin/login', req.url);
       loginUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(loginUrl);
@@ -24,7 +32,7 @@ export default auth((req: NextRequest & { auth: unknown }) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ['/admin/:path*'],

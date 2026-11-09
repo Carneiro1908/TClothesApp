@@ -40,6 +40,13 @@ next-env.d.ts
 *.db-shm
 *.db-wal
 
+# Terraform local state
+.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+terraform.tfvars
+
 # IDEs
 .idea/
 .vscode/
