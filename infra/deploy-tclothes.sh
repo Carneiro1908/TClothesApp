@@ -12,7 +12,7 @@ docker rm -f tclothes || true
 AUTH_SECRET="$(gcloud secrets versions access latest --secret=tclothes-auth-secret --project="$PROJECT")"
 NEXTAUTH_URL="$(gcloud secrets versions access latest --secret=tclothes-nextauth-url --project="$PROJECT")"
 docker run -d --name tclothes --restart unless-stopped --network tclothes-public -v /data:/data \
-  -e DATABASE_PATH=/data/tclothes.db -e AUTH_SECRET="$AUTH_SECRET" \
+  -e DATABASE_PATH=/data/tclothes.db -e UPLOADS_DIR=/data/product-uploads -e AUTH_SECRET="$AUTH_SECRET" \
   -e NEXTAUTH_SECRET="$AUTH_SECRET" -e NEXTAUTH_URL="$NEXTAUTH_URL" \
   -e AUTH_URL="$NEXTAUTH_URL" -e AUTH_TRUST_HOST=true \
   "$IMAGE"

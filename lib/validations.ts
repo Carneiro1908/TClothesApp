@@ -21,7 +21,7 @@ export const ProductSchema = z.object({
     .max(99999, 'Price seems too high'),
   image_url: z
     .string()
-    .url('Must be a valid URL')
+    .refine((value) => value.startsWith('/api/uploads/') || z.string().url().safeParse(value).success, 'Must be a valid URL')
     .optional()
     .nullable()
     .or(z.literal('')),

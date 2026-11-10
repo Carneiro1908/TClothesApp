@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { ProductSchema } from '@/lib/validations';
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { v4 as uuidv4 } from 'uuid';
+
+const IMAGE_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif',
+};
 
 async function requireAuth() {
   const session = await auth();
@@ -30,10 +37,23 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const form = await request.formData();
+    let imageUrl = String(form.get('image_url') || '').trim() || null;
+    const image = form.get('image');
+    if (image instanceof File && image.size > 0) {
+      const extension = IMAGE_TYPES[image.type];
+      if (!extension) return NextResponse.json({ error: 'Unsupported image type' }, { status: 400 });
+      if (image.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'Image must be 5 MB or smaller' }, { status: 400 });
+      const filename = `${uuidv4()}.${extension}`;
+      const directory = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
+      await mkdir(directory, { recursive: true });
+      await writeFile(path.join(directory, filename), Buffer.from(await image.arrayBuffer()));
+      imageUrl = `/api/uploads/${filename}`;
+    }
     const parsed = ProductSchema.safeParse({
-      ...body,
-      price: typeof body.price === 'string' ? parseFloat(body.price) : body.price,
+      name: form.get('name'), category: form.get('category'),
+      description: String(form.get('description') || '').trim() || null,
+      price: parseFloat(String(form.get('price'))), image_url: imageUrl, status: form.get('status'),
     });
 
     if (!parsed.success) {

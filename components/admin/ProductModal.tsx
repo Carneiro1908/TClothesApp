@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { X, Loader2, AlertCircle, Image as ImageIcon } from 'lucide-react';
+import { X, Loader2, AlertCircle, Upload } from 'lucide-react';
 import type { Product } from './ProductTable';
 
 interface ProductModalProps {
@@ -55,6 +55,8 @@ export default function ProductModal({
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     if (editProduct) {
@@ -71,6 +73,8 @@ export default function ProductModal({
     }
     setErrors({});
     setServerError('');
+    setImageFile(null);
+    setImagePreview('');
   }, [editProduct, isOpen]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -80,12 +84,14 @@ export default function ProductModal({
     setIsLoading(true);
 
     try {
-      const payload = {
-        ...form,
-        price: parseFloat(form.price),
-        image_url: form.image_url.trim() || null,
-        description: form.description.trim() || null,
-      };
+      const payload = new FormData();
+      payload.set('name', form.name);
+      payload.set('category', form.category);
+      payload.set('description', form.description.trim());
+      payload.set('price', form.price);
+      payload.set('image_url', form.image_url);
+      payload.set('status', form.status);
+      if (imageFile) payload.set('image', imageFile);
 
       const url = editProduct
         ? `/api/admin/products/${editProduct.id}`
@@ -94,8 +100,7 @@ export default function ProductModal({
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: payload,
       });
 
       const data = await res.json();
@@ -253,40 +258,37 @@ export default function ProductModal({
               )}
             </div>
 
-            {/* Image URL */}
+            {/* Product image */}
             <div className="space-y-1.5">
               <label className="block text-xs font-medium tracking-widest uppercase text-brand-muted">
-                Image URL
+                Product Image
               </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted">
-                  <ImageIcon size={14} />
-                </div>
+              <label className="flex cursor-pointer items-center gap-2 border border-brand-border bg-brand-card px-3 py-3 text-sm text-brand-muted hover:border-gold/50 hover:text-white">
+                <Upload size={16} />
+                <span>{imageFile ? imageFile.name : 'Choose an image from your device'}</span>
                 <input
-                  type="url"
-                  value={form.image_url}
-                  onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
-                  className={`w-full bg-brand-card border text-white text-sm pl-9 pr-3 py-2.5 focus:outline-none transition-colors ${
-                    getFieldError('image_url')
-                      ? 'border-red-500/50 focus:border-red-500'
-                      : 'border-brand-border focus:border-gold/50'
-                  }`}
-                  placeholder="https://example.com/image.jpg"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setImageFile(file);
+                    setImagePreview(file ? URL.createObjectURL(file) : '');
+                  }}
                 />
-              </div>
+              </label>
+              <p className="text-xs text-brand-muted">JPEG, PNG, WebP or GIF. Maximum 5 MB.</p>
               {getFieldError('image_url') && (
                 <p className="text-xs text-red-400">{getFieldError('image_url')}</p>
               )}
-              {form.image_url && (
+              {(imagePreview || form.image_url) && (
                 <div className="relative w-16 h-16 mt-2 border border-brand-border overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={form.image_url}
+                    src={imagePreview || form.image_url}
                     alt="Preview"
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 </div>
               )}
