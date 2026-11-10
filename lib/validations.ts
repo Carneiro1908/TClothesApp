@@ -43,6 +43,7 @@ export const LoginSchema = z.object({
     .string()
     .min(1, 'Password is required')
     .max(200),
+  totpCode: z.string().regex(/^\d{6}$/).optional().or(z.literal('')),
 });
 
 export type LoginInput = z.infer<typeof LoginSchema>;

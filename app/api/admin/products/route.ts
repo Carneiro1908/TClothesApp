@@ -62,11 +62,10 @@ export async function GET() {
          FROM products
          ORDER BY created_at DESC`
       )
-      .all();
+      .all() as Array<Record<string, unknown>>;
 
     return NextResponse.json({ products: products.map((product) => {
-      const row = product as Record<string, unknown>;
-      return { ...row, image_urls: parseProductImages(row.image_urls, row.image_url) };
+      return { ...product, image_urls: parseProductImages(product.image_urls, product.image_url) };
     }) });
   } catch (error) {
     console.error('GET /api/admin/products error:', error);

@@ -12,6 +12,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  ShieldCheck,
 } from 'lucide-react';
 import ProductTable, { type Product } from '@/components/admin/ProductTable';
 import ProductModal from '@/components/admin/ProductModal';
@@ -153,6 +154,10 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
+            <Link href="/admin/security" className="flex items-center gap-2 border border-brand-border px-3 py-2 text-sm text-brand-muted transition-colors hover:border-gold/40 hover:text-white" title="Authenticator settings">
+              <ShieldCheck size={15} />
+              <span className="hidden sm:inline">Security</span>
+            </Link>
             <button
               onClick={fetchProducts}
               disabled={isLoading}

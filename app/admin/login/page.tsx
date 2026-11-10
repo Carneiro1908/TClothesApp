@@ -10,6 +10,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [totpCode, setTotpCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +24,7 @@ export default function AdminLoginPage() {
       const result = await signIn('credentials', {
         username: username.trim(),
         password,
+        totpCode,
         redirect: false,
       });
 
@@ -30,7 +32,7 @@ export default function AdminLoginPage() {
         if (result.error.includes('locked')) {
           setError('Account temporarily locked. Too many failed attempts. Try again in 15 minutes.');
         } else {
-          setError('Invalid username or password. Please try again.');
+          setError('Invalid username, password, or authenticator code. Please try again.');
         }
       } else if (result?.ok) {
         router.push('/admin/dashboard');
@@ -137,6 +139,26 @@ export default function AdminLoginPage() {
                 {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
+          </div>
+
+          {/* Submit */}
+          <div className="space-y-1.5">
+            <label htmlFor="totpCode" className="block text-xs font-medium tracking-widest uppercase text-brand-muted">
+              Authenticator Code <span className="normal-case tracking-normal">(if enabled)</span>
+            </label>
+            <input
+              id="totpCode"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              value={totpCode}
+              onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              disabled={isLoading}
+              className="w-full bg-brand-card border border-brand-border text-white text-sm px-3 py-2.5 focus:outline-none focus:border-gold/50 transition-colors disabled:opacity-50"
+              placeholder="123456"
+            />
           </div>
 
           {/* Submit */}

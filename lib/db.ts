@@ -41,6 +41,14 @@ export function getDb(): Database.Database {
       );
     `);
 
+    const adminColumns = db.prepare('PRAGMA table_info(admin_users)').all() as Array<{ name: string }>;
+    if (!adminColumns.some((column) => column.name === 'totp_secret')) {
+      db.exec('ALTER TABLE admin_users ADD COLUMN totp_secret TEXT');
+    }
+    if (!adminColumns.some((column) => column.name === 'totp_enabled')) {
+      db.exec('ALTER TABLE admin_users ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0');
+    }
+
     const productColumns = db.prepare('PRAGMA table_info(products)').all() as Array<{ name: string }>;
     if (!productColumns.some((column) => column.name === 'image_urls')) {
       db.exec("ALTER TABLE products ADD COLUMN image_urls TEXT NOT NULL DEFAULT '[]'");

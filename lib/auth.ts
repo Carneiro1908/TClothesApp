@@ -3,6 +3,7 @@ import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { getDb } from './db';
 import { LoginSchema } from './validations';
+import { decryptTotpSecret, verifyTotp } from './totp';
 
 const LOCKOUT_WINDOW_MINUTES = 15;
 const MAX_FAILED_ATTEMPTS = 5;
@@ -37,6 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         username: { label: 'Username', type: 'text' },
         password: { label: 'Password', type: 'password' },
+        totpCode: { label: 'Authenticator code', type: 'text' },
       },
       async authorize(credentials) {
         const parsed = LoginSchema.safeParse(credentials);
@@ -55,7 +57,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const user = db
           .prepare(`SELECT * FROM admin_users WHERE username = ?`)
           .get(username) as
-          | { id: string; username: string; password_hash: string }
+          | { id: string; username: string; password_hash: string; totp_secret: string | null; totp_enabled: number }
           | undefined;
 
         if (!user) {
@@ -68,6 +70,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!isValid) {
           recordAttempt(username, false);
           return null;
+        }
+
+        if (user.totp_enabled) {
+          let validCode = false;
+          if (credentials.totpCode && user.totp_secret) {
+            try {
+              validCode = verifyTotp(decryptTotpSecret(user.totp_secret), String(credentials.totpCode));
+            } catch {
+              validCode = false;
+            }
+          }
+          if (!validCode) {
+            recordAttempt(username, false);
+            return null;
+          }
         }
 
         recordAttempt(username, true);
