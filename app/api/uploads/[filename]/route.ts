@@ -10,7 +10,9 @@ export async function GET(_request: Request, { params }: { params: { filename: s
   const match = /^([0-9a-f-]{36})\.(jpg|png|webp|gif|pdf)$/i.exec(params.filename);
   if (!match) return new NextResponse('Not found', { status: 404 });
   try {
-    const directory = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
+    const directory = process.env.UPLOADS_DIR || (process.env.NODE_ENV === 'production'
+      ? '/data/product-uploads'
+      : path.join(process.cwd(), 'uploads'));
     const image = await readFile(path.join(directory, params.filename));
     return new NextResponse(image, {
       headers: {

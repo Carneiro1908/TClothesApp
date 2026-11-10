@@ -20,7 +20,9 @@ async function readProductForm(request: NextRequest) {
     if (!extension) throw new Error('Use JPEG, PNG, WebP, GIF or PDF');
     if (image.size > 5 * 1024 * 1024) throw new Error('Image must be 5 MB or smaller');
     const filename = `${uuidv4()}.${extension}`;
-    const directory = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
+    const directory = process.env.UPLOADS_DIR || (process.env.NODE_ENV === 'production'
+      ? '/data/product-uploads'
+      : path.join(process.cwd(), 'uploads'));
     await mkdir(directory, { recursive: true });
     await writeFile(path.join(directory, filename), Buffer.from(await image.arrayBuffer()));
     imageUrl = `/api/uploads/${filename}`;

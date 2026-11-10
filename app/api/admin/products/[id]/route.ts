@@ -46,7 +46,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       if (!extension) return NextResponse.json({ error: 'Use JPEG, PNG, WebP, GIF or PDF' }, { status: 400 });
       if (image.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'Image must be 5 MB or smaller' }, { status: 400 });
       const filename = `${uuidv4()}.${extension}`;
-      const directory = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
+      const directory = process.env.UPLOADS_DIR || (process.env.NODE_ENV === 'production'
+        ? '/data/product-uploads'
+        : path.join(process.cwd(), 'uploads'));
       await mkdir(directory, { recursive: true });
       await writeFile(path.join(directory, filename), Buffer.from(await image.arrayBuffer()));
       imageUrl = `/api/uploads/${filename}`;
