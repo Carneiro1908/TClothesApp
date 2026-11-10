@@ -4,6 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Menu, X, Shield } from 'lucide-react';
 
+const links = [
+  { href: '#inicio', label: 'Início' },
+  { href: '#achilles-design', label: 'Coleção' },
+  { href: '#novidades', label: 'Novidades' },
+  { href: '#lancamento', label: 'Lançamento' },
+  { href: '#about', label: 'Sobre' },
+];
+
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -27,26 +35,19 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center group">
+          <Link href="#inicio" className="flex items-center group">
             <span className="text-2xl font-serif font-bold tracking-widest text-white group-hover:text-gold transition-colors duration-200">
               T<span className="text-gold">C</span>lothes
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="#achilles-design"
-              className="text-sm font-medium tracking-widest uppercase text-brand-muted hover:text-gold transition-colors duration-200"
-            >
-              Achilles Design
-            </Link>
-            <Link
-              href="#about"
-              className="text-sm font-medium tracking-widest uppercase text-brand-muted hover:text-gold transition-colors duration-200"
-            >
-              About
-            </Link>
+          <div className="hidden md:flex items-center gap-5">
+            {links.map((link) => (
+              <Link key={link.href} href={link.href} className="text-xs font-medium tracking-widest uppercase text-brand-muted hover:text-gold transition-colors duration-200">
+                {link.label}
+              </Link>
+            ))}
             <Link
               href="/admin/login"
               className="flex items-center gap-1.5 text-xs font-medium tracking-wider uppercase text-brand-muted/60 hover:text-brand-muted transition-colors duration-200"
@@ -70,24 +71,22 @@ export default function Navbar() {
       {/* Mobile menu */}
       <div
         className={`md:hidden transition-all duration-300 overflow-hidden ${
-          isMobileMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
+          isMobileMenuOpen ? 'max-h-[32rem] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         <div className="bg-black/95 backdrop-blur-md border-t border-brand-border px-4 py-6 flex flex-col space-y-4">
           <Link
-            href="#achilles-design"
+            href="#inicio"
             onClick={() => setIsMobileMenuOpen(false)}
             className="text-sm font-medium tracking-widest uppercase text-brand-muted hover:text-gold transition-colors"
           >
-            Achilles Design
+            Início
           </Link>
-          <Link
-            href="#about"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="text-sm font-medium tracking-widest uppercase text-brand-muted hover:text-gold transition-colors"
-          >
-            About
-          </Link>
+          {links.slice(1).map((link) => (
+            <Link key={link.href} href={link.href} onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium tracking-widest uppercase text-brand-muted hover:text-gold transition-colors">
+              {link.label}
+            </Link>
+          ))}
           <Link
             href="/admin/login"
             onClick={() => setIsMobileMenuOpen(false)}

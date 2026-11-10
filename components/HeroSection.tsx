@@ -8,7 +8,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-brand-bg">
+    <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-brand-bg">
       {/* Background texture */}
       <div
         className="absolute inset-0 opacity-5"
@@ -35,7 +35,7 @@ export default function HeroSection() {
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto animate-fade-in">
         {/* Pre-heading */}
         <p className="text-xs font-medium tracking-[0.4em] uppercase text-gold mb-6 opacity-80">
-          Achilles Design · Premium Streetwear
+          Achilles Design · Streetwear premium
         </p>
 
         {/* Main brand name */}
@@ -52,10 +52,10 @@ export default function HeroSection() {
 
         {/* Tagline */}
         <p className="text-lg md:text-xl font-light tracking-[0.2em] uppercase text-white/60 mb-4">
-          Wear the Legend
+          Vista a lenda
         </p>
         <p className="text-sm text-brand-muted max-w-md mx-auto leading-relaxed">
-          Precision-crafted apparel for those who demand more. Where street culture meets uncompromising quality.
+          Peças criadas com rigor para quem exige mais. Onde a cultura urbana encontra qualidade sem concessões.
         </p>
 
         {/* CTA */}
@@ -64,7 +64,7 @@ export default function HeroSection() {
             onClick={handleScroll}
             className="px-8 py-3.5 bg-gold text-black text-sm font-semibold tracking-widest uppercase hover:bg-gold-light transition-colors duration-200"
           >
-            Shop Now
+            Explorar coleção
           </button>
           <button
             onClick={() =>
@@ -72,9 +72,13 @@ export default function HeroSection() {
             }
             className="px-8 py-3.5 border border-brand-border text-sm font-medium tracking-widest uppercase text-brand-muted hover:border-gold/40 hover:text-white transition-colors duration-200"
           >
-            Our Story
+            A nossa história
           </button>
         </div>
+        <a href="#lancamento" className="mt-10 inline-flex flex-col items-center gap-1 border-t border-gold/30 pt-4 text-gold">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-brand-muted">Lançamento previsto</span>
+          <time dateTime="2026-11-20" className="font-serif text-2xl tracking-widest">20.11.2026</time>
+        </a>
       </div>
 
       {/* Scroll indicator */}
