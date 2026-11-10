@@ -1,5 +1,4 @@
-import Link from 'next/link';
-import { Instagram, Shield } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -47,7 +46,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Social & Admin */}
+          {/* Social */}
           <div>
             <h4 className="text-xs font-semibold tracking-[0.3em] uppercase text-gold mb-6">
               Connect
@@ -62,13 +61,6 @@ export default function Footer() {
                 <Instagram size={14} />
                 @tclothes
               </a>
-              <Link
-                href="/admin/login"
-                className="flex items-center gap-2 text-xs text-brand-muted/40 hover:text-brand-muted transition-colors"
-              >
-                <Shield size={12} />
-                Admin Access
-              </Link>
             </div>
           </div>
         </div>

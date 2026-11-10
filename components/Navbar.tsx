@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Shield } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 const links = [
   { href: '#inicio', label: 'Início' },
@@ -46,13 +46,6 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/admin/login"
-              className="flex items-center gap-1.5 text-xs font-medium tracking-wider uppercase text-brand-muted/60 hover:text-brand-muted transition-colors duration-200"
-            >
-              <Shield size={12} />
-              Admin
-            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -85,14 +78,6 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link
-            href="/admin/login"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-1.5 text-xs font-medium tracking-wider uppercase text-brand-muted/60 hover:text-brand-muted transition-colors"
-          >
-            <Shield size={12} />
-            Admin
-          </Link>
         </div>
       </div>
     </nav>
