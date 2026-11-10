@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Instagram } from 'lucide-react';
 
 export default function Footer() {
