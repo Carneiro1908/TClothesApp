@@ -21,6 +21,7 @@ export function getDb(): Database.Database {
         description TEXT,
         price REAL NOT NULL,
         image_url TEXT,
+        image_urls TEXT NOT NULL DEFAULT '[]',
         status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','coming_soon','hidden')),
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
@@ -39,9 +40,29 @@ export function getDb(): Database.Database {
         success INTEGER NOT NULL DEFAULT 0
       );
     `);
+
+    const productColumns = db.prepare('PRAGMA table_info(products)').all() as Array<{ name: string }>;
+    if (!productColumns.some((column) => column.name === 'image_urls')) {
+      db.exec("ALTER TABLE products ADD COLUMN image_urls TEXT NOT NULL DEFAULT '[]'");
+    }
   }
 
   return db;
+}
+
+export function parseProductImages(imageUrls: unknown, imageUrl?: unknown): string[] {
+  if (typeof imageUrls === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(imageUrls);
+      if (Array.isArray(parsed)) {
+        const urls = parsed.filter((url): url is string => typeof url === 'string' && url.length > 0);
+        if (urls.length) return urls;
+      }
+    } catch {
+      // Older records may not have a populated gallery column yet.
+    }
+  }
+  return typeof imageUrl === 'string' && imageUrl ? [imageUrl] : [];
 }
 
 export default getDb;

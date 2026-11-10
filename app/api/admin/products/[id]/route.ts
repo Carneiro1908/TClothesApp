@@ -39,24 +39,32 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const form = await request.formData();
-    let imageUrl = String(form.get('image_url') || '').trim() || null;
-    const image = form.get('image');
-    if (image && typeof image !== 'string' && image.size > 0) {
+    let imageUrls: string[];
+    try {
+      const value: unknown = JSON.parse(String(form.get('existing_images') || '[]'));
+      if (!Array.isArray(value) || !value.every((url) => typeof url === 'string')) throw new Error();
+      imageUrls = value;
+    } catch {
+      return NextResponse.json({ error: 'Invalid product image list' }, { status: 400 });
+    }
+    for (const image of form.getAll('images')) {
+      if (typeof image === 'string' || image.size === 0) continue;
       const extension = IMAGE_TYPES[image.type];
       if (!extension) return NextResponse.json({ error: 'Use JPEG, PNG, WebP, GIF or PDF' }, { status: 400 });
-      if (image.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'Image must be 5 MB or smaller' }, { status: 400 });
+      if (image.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'Each file must be 5 MB or smaller' }, { status: 400 });
       const filename = `${uuidv4()}.${extension}`;
       const directory = process.env.UPLOADS_DIR || (process.env.NODE_ENV === 'production'
         ? '/data/product-uploads'
         : path.join(process.cwd(), 'uploads'));
       await mkdir(directory, { recursive: true });
       await writeFile(path.join(directory, filename), Buffer.from(await image.arrayBuffer()));
-      imageUrl = `/api/uploads/${filename}`;
+      imageUrls.push(`/api/uploads/${filename}`);
     }
     const parsed = ProductSchema.safeParse({
       name: form.get('name'), category: form.get('category'),
       description: String(form.get('description') || '').trim() || null,
-      price: parseFloat(String(form.get('price'))), image_url: imageUrl, status: form.get('status'),
+      price: parseFloat(String(form.get('price'))), image_url: imageUrls[0] || null,
+      image_urls: imageUrls, status: form.get('status'),
     });
 
     if (!parsed.success) {
@@ -70,7 +78,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     db.prepare(
       `UPDATE products
-       SET name = ?, category = ?, description = ?, price = ?, image_url = ?, status = ?
+       SET name = ?, category = ?, description = ?, price = ?, image_url = ?, image_urls = ?, status = ?
        WHERE id = ?`
     ).run(
       name,
@@ -78,6 +86,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       description || null,
       price,
       image_url || null,
+      JSON.stringify(parsed.data.image_urls || (image_url ? [image_url] : [])),
       status,
       id
     );

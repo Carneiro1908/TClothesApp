@@ -55,8 +55,9 @@ export default function ProductModal({
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState('');
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   useEffect(() => {
     if (editProduct) {
@@ -68,13 +69,15 @@ export default function ProductModal({
         image_url: editProduct.image_url || '',
         status: editProduct.status,
       });
+      setExistingImages(editProduct.image_urls?.length ? editProduct.image_urls : editProduct.image_url ? [editProduct.image_url] : []);
     } else {
       setForm(DEFAULT_FORM);
+      setExistingImages([]);
     }
     setErrors({});
     setServerError('');
-    setImageFile(null);
-    setImagePreview('');
+    setImageFiles([]);
+    setImagePreviews([]);
   }, [editProduct, isOpen]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -89,9 +92,9 @@ export default function ProductModal({
       payload.set('category', form.category);
       payload.set('description', form.description.trim());
       payload.set('price', form.price);
-      payload.set('image_url', form.image_url);
+      payload.set('existing_images', JSON.stringify(existingImages));
       payload.set('status', form.status);
-      if (imageFile) payload.set('image', imageFile);
+      imageFiles.forEach((file) => payload.append('images', file));
 
       const url = editProduct
         ? `/api/admin/products/${editProduct.id}`
@@ -261,41 +264,53 @@ export default function ProductModal({
             {/* Product image */}
             <div className="space-y-1.5">
               <label className="block text-xs font-medium tracking-widest uppercase text-brand-muted">
-                Product Image
+              Product Images
               </label>
               <label className="flex cursor-pointer items-center gap-2 border border-brand-border bg-brand-card px-3 py-3 text-sm text-brand-muted hover:border-gold/50 hover:text-white">
                 <Upload size={16} />
-                <span>{imageFile ? imageFile.name : 'Choose an image or PDF from your device'}</span>
+                <span>Choose images or PDFs from your device</span>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf"
+                  multiple
                   className="sr-only"
                   onChange={(e) => {
-                    const file = e.target.files?.[0] || null;
-                    setImageFile(file);
-                    setImagePreview(file ? URL.createObjectURL(file) : '');
+                    const files = Array.from(e.target.files || []);
+                    setImageFiles((current) => [...current, ...files]);
+                    setImagePreviews((current) => [...current, ...files.map((file) => URL.createObjectURL(file))]);
+                    e.currentTarget.value = '';
                   }}
                 />
               </label>
-              <p className="text-xs text-brand-muted">JPEG, PNG, WebP, GIF or PDF. Maximum 5 MB.</p>
+              <p className="text-xs text-brand-muted">Add one image per colour. JPEG, PNG, WebP, GIF or PDF; maximum 5 MB each.</p>
               {getFieldError('image_url') && (
                 <p className="text-xs text-red-400">{getFieldError('image_url')}</p>
               )}
-              {(imagePreview || form.image_url) && (imageFile?.type === 'application/pdf' || (!imagePreview && form.image_url.toLowerCase().endsWith('.pdf')) ? (
-                <a href={imagePreview || form.image_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 border border-brand-border px-3 py-2 text-xs text-gold hover:border-gold/50">
-                  <FileText size={16} /> Open PDF preview
-                </a>
-              ) : (
-                <div className="relative w-16 h-16 mt-2 border border-brand-border overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={imagePreview || form.image_url}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                </div>
-              ))}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {existingImages.map((url, index) => (
+                  <div key={url} className="relative h-16 w-16 overflow-hidden border border-brand-border">
+                    {url.toLowerCase().endsWith('.pdf') ? (
+                      <a href={url} target="_blank" rel="noreferrer" className="flex h-full flex-col items-center justify-center text-gold" aria-label="Open PDF"><FileText size={18} /><span className="text-[9px]">PDF</span></a>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={url} alt={`Product option ${index + 1}`} className="h-full w-full object-cover" />
+                    )}
+                    <button type="button" onClick={() => setExistingImages((images) => images.filter((_, i) => i !== index))} className="absolute right-0 top-0 bg-black/80 p-0.5 text-white" aria-label="Remove file"><X size={12} /></button>
+                  </div>
+                ))}
+                {imagePreviews.map((url, index) => {
+                  const file = imageFiles[index];
+                  return <div key={url} className="relative h-16 w-16 overflow-hidden border border-brand-border">
+                    {file?.type === 'application/pdf' ? (
+                      <a href={url} target="_blank" rel="noreferrer" className="flex h-full flex-col items-center justify-center text-gold"><FileText size={18} /><span className="text-[9px]">PDF</span></a>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={url} alt={file?.name || `New image ${index + 1}`} className="h-full w-full object-cover" />
+                    )}
+                    <button type="button" onClick={() => { setImageFiles((files) => files.filter((_, i) => i !== index)); setImagePreviews((previews) => previews.filter((_, i) => i !== index)); }} className="absolute right-0 top-0 bg-black/80 p-0.5 text-white" aria-label="Remove file"><X size={12} /></button>
+                  </div>;
+                })}
+              </div>
             </div>
 
             {/* Description */}

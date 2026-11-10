@@ -25,6 +25,7 @@ export const ProductSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal('')),
+  image_urls: z.array(z.string().min(1)).optional(),
   status: z.enum(['active', 'coming_soon', 'hidden'], {
     errorMap: () => ({ message: 'Invalid status' }),
   }),

@@ -11,6 +11,7 @@ export interface Product {
   description?: string | null;
   price: number;
   image_url?: string | null;
+  image_urls?: string[];
   status: 'active' | 'coming_soon' | 'hidden';
   created_at: string;
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { getDb } from '@/lib/db';
+import { getDb, parseProductImages } from '@/lib/db';
 import { ProductSchema } from '@/lib/validations';
 import { v4 as uuidv4 } from 'uuid';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -13,24 +13,29 @@ const IMAGE_TYPES: Record<string, string> = {
 
 async function readProductForm(request: NextRequest) {
   const form = await request.formData();
-  let imageUrl = String(form.get('image_url') || '').trim() || null;
-  const image = form.get('image');
-  if (image && typeof image !== 'string' && image.size > 0) {
+  const existingImagesValue = String(form.get('existing_images') || '[]');
+  let imageUrls: string[] = [];
+  try {
+    const parsed: unknown = JSON.parse(existingImagesValue);
+    if (Array.isArray(parsed)) imageUrls = parsed.filter((url): url is string => typeof url === 'string' && url.length > 0);
+  } catch { throw new Error('Invalid product image list'); }
+  for (const image of form.getAll('images')) {
+    if (typeof image === 'string' || image.size === 0) continue;
     const extension = IMAGE_TYPES[image.type];
     if (!extension) throw new Error('Use JPEG, PNG, WebP, GIF or PDF');
-    if (image.size > 5 * 1024 * 1024) throw new Error('Image must be 5 MB or smaller');
+    if (image.size > 5 * 1024 * 1024) throw new Error('Each file must be 5 MB or smaller');
     const filename = `${uuidv4()}.${extension}`;
     const directory = process.env.UPLOADS_DIR || (process.env.NODE_ENV === 'production'
       ? '/data/product-uploads'
       : path.join(process.cwd(), 'uploads'));
     await mkdir(directory, { recursive: true });
     await writeFile(path.join(directory, filename), Buffer.from(await image.arrayBuffer()));
-    imageUrl = `/api/uploads/${filename}`;
+    imageUrls.push(`/api/uploads/${filename}`);
   }
   return {
     name: form.get('name'), category: form.get('category'),
     description: String(form.get('description') || '').trim() || null,
-    price: parseFloat(String(form.get('price'))), image_url: imageUrl,
+    price: parseFloat(String(form.get('price'))), image_url: imageUrls[0] || null, image_urls: imageUrls,
     status: form.get('status'),
   };
 }
@@ -53,13 +58,16 @@ export async function GET() {
     const db = getDb();
     const products = db
       .prepare(
-        `SELECT id, name, category, description, price, image_url, status, created_at
+        `SELECT id, name, category, description, price, image_url, image_urls, status, created_at
          FROM products
          ORDER BY created_at DESC`
       )
       .all();
 
-    return NextResponse.json({ products });
+    return NextResponse.json({ products: products.map((product) => {
+      const row = product as Record<string, unknown>;
+      return { ...row, image_urls: parseProductImages(row.image_urls, row.image_url) };
+    }) });
   } catch (error) {
     console.error('GET /api/admin/products error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -92,8 +100,8 @@ export async function POST(request: NextRequest) {
 
     const db = getDb();
     db.prepare(
-      `INSERT INTO products (id, name, category, description, price, image_url, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO products (id, name, category, description, price, image_url, image_urls, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       id,
       name,
@@ -101,6 +109,7 @@ export async function POST(request: NextRequest) {
       description || null,
       price,
       image_url || null,
+      JSON.stringify(parsed.data.image_urls || (image_url ? [image_url] : [])),
       status
     );
 

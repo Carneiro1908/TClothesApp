@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import { Clock, FileText } from 'lucide-react';
 
@@ -8,6 +11,7 @@ interface Product {
   description?: string | null;
   price: number;
   image_url?: string | null;
+  image_urls?: string[];
   status: 'active' | 'coming_soon' | 'hidden';
 }
 
@@ -42,6 +46,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 export default function ProductCard({ item }: ProductCardProps) {
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   if (isPlaceholder(item)) {
     return (
       <div className="relative group bg-brand-card border border-brand-border overflow-hidden">
@@ -108,19 +113,22 @@ export default function ProductCard({ item }: ProductCardProps) {
     );
   }
 
+  const images = item.image_urls?.length ? item.image_urls : item.image_url ? [item.image_url] : [];
+  const activeImage = images[Math.min(activeImageIndex, images.length - 1)];
+
   // Real product card
   return (
     <div className="relative group bg-brand-card border border-brand-border overflow-hidden hover:border-gold/30 transition-colors duration-300">
       {/* Product image */}
       <div className="aspect-[3/4] bg-brand-surface relative overflow-hidden">
-        {item.image_url?.toLowerCase().endsWith('.pdf') ? (
-          <a href={item.image_url} target="_blank" rel="noreferrer" className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-gold hover:bg-white/5" aria-label={`Open ${item.name} PDF`}>
+        {activeImage?.toLowerCase().endsWith('.pdf') ? (
+          <a href={activeImage} target="_blank" rel="noreferrer" className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-gold hover:bg-white/5" aria-label={`Open ${item.name} PDF`}>
             <FileText size={48} strokeWidth={1.25} />
             <span className="text-xs font-medium uppercase tracking-widest">Open product PDF</span>
           </a>
-        ) : item.image_url ? (
+        ) : activeImage ? (
           <Image
-            src={item.image_url}
+            src={activeImage}
             alt={item.name}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -135,11 +143,20 @@ export default function ProductCard({ item }: ProductCardProps) {
         )}
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+        <div className="pointer-events-none absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <span className="text-xs font-medium tracking-widest uppercase text-white border border-white/40 px-6 py-2.5 hover:bg-white/10 transition-colors cursor-pointer">
             View Details
           </span>
         </div>
+        {images.length > 1 && (
+          <div className="absolute bottom-3 left-0 right-0 z-10 flex justify-center gap-2">
+            {images.map((url, index) => (
+              <button key={url} type="button" onClick={() => setActiveImageIndex(index)} aria-label={`Show product option ${index + 1}`} aria-pressed={index === activeImageIndex} className={`h-10 w-10 overflow-hidden border-2 bg-brand-card ${index === activeImageIndex ? 'border-gold' : 'border-white/50'}`}>
+                {url.toLowerCase().endsWith('.pdf') ? <FileText size={18} className="mx-auto text-gold" /> : <Image src={url} alt="" width={40} height={40} className="h-full w-full object-cover" />}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Product info */}

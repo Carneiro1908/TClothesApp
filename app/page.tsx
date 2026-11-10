@@ -1,4 +1,4 @@
-import { getDb } from '@/lib/db';
+import { getDb, parseProductImages } from '@/lib/db';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import AchillesDesignSection from '@/components/AchillesDesignSection';
@@ -12,6 +12,7 @@ interface Product {
   description?: string | null;
   price: number;
   image_url?: string | null;
+  image_urls?: string[];
   status: 'active' | 'coming_soon' | 'hidden';
   created_at: string;
 }
@@ -19,14 +20,18 @@ interface Product {
 function getProducts(): Product[] {
   try {
     const db = getDb();
-    return db
+    const products = db
       .prepare(
-        `SELECT id, name, category, description, price, image_url, status, created_at
+        `SELECT id, name, category, description, price, image_url, image_urls, status, created_at
          FROM products
          WHERE status != 'hidden'
          ORDER BY created_at ASC`
       )
       .all() as Product[];
+    return products.map((product) => ({
+      ...product,
+      image_urls: parseProductImages(product.image_urls, product.image_url),
+    }));
   } catch {
     return [];
   }
