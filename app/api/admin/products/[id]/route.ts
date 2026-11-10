@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const IMAGE_TYPES: Record<string, string> = {
   'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif',
+  'application/pdf': 'pdf',
 };
 
 async function requireAuth() {
@@ -40,9 +41,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const form = await request.formData();
     let imageUrl = String(form.get('image_url') || '').trim() || null;
     const image = form.get('image');
-    if (image instanceof File && image.size > 0) {
+    if (image && typeof image !== 'string' && image.size > 0) {
       const extension = IMAGE_TYPES[image.type];
-      if (!extension) return NextResponse.json({ error: 'Unsupported image type' }, { status: 400 });
+      if (!extension) return NextResponse.json({ error: 'Use JPEG, PNG, WebP, GIF or PDF' }, { status: 400 });
       if (image.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'Image must be 5 MB or smaller' }, { status: 400 });
       const filename = `${uuidv4()}.${extension}`;
       const directory = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');

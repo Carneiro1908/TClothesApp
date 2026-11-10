@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Clock } from 'lucide-react';
+import { Clock, FileText } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -113,7 +113,12 @@ export default function ProductCard({ item }: ProductCardProps) {
     <div className="relative group bg-brand-card border border-brand-border overflow-hidden hover:border-gold/30 transition-colors duration-300">
       {/* Product image */}
       <div className="aspect-[3/4] bg-brand-surface relative overflow-hidden">
-        {item.image_url ? (
+        {item.image_url?.toLowerCase().endsWith('.pdf') ? (
+          <a href={item.image_url} target="_blank" rel="noreferrer" className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-gold hover:bg-white/5" aria-label={`Open ${item.name} PDF`}>
+            <FileText size={48} strokeWidth={1.25} />
+            <span className="text-xs font-medium uppercase tracking-widest">Open product PDF</span>
+          </a>
+        ) : item.image_url ? (
           <Image
             src={item.image_url}
             alt={item.name}

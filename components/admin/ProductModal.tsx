@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { X, Loader2, AlertCircle, Upload } from 'lucide-react';
+import { X, Loader2, AlertCircle, Upload, FileText } from 'lucide-react';
 import type { Product } from './ProductTable';
 
 interface ProductModalProps {
@@ -265,10 +265,10 @@ export default function ProductModal({
               </label>
               <label className="flex cursor-pointer items-center gap-2 border border-brand-border bg-brand-card px-3 py-3 text-sm text-brand-muted hover:border-gold/50 hover:text-white">
                 <Upload size={16} />
-                <span>{imageFile ? imageFile.name : 'Choose an image from your device'}</span>
+                <span>{imageFile ? imageFile.name : 'Choose an image or PDF from your device'}</span>
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf"
                   className="sr-only"
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
@@ -277,11 +277,15 @@ export default function ProductModal({
                   }}
                 />
               </label>
-              <p className="text-xs text-brand-muted">JPEG, PNG, WebP or GIF. Maximum 5 MB.</p>
+              <p className="text-xs text-brand-muted">JPEG, PNG, WebP, GIF or PDF. Maximum 5 MB.</p>
               {getFieldError('image_url') && (
                 <p className="text-xs text-red-400">{getFieldError('image_url')}</p>
               )}
-              {(imagePreview || form.image_url) && (
+              {(imagePreview || form.image_url) && (imageFile?.type === 'application/pdf' || (!imagePreview && form.image_url.toLowerCase().endsWith('.pdf')) ? (
+                <a href={imagePreview || form.image_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 border border-brand-border px-3 py-2 text-xs text-gold hover:border-gold/50">
+                  <FileText size={16} /> Open PDF preview
+                </a>
+              ) : (
                 <div className="relative w-16 h-16 mt-2 border border-brand-border overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -291,7 +295,7 @@ export default function ProductModal({
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 </div>
-              )}
+              ))}
             </div>
 
             {/* Description */}

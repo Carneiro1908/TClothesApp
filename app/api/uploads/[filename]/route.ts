@@ -3,11 +3,11 @@ import path from 'node:path';
 import { NextResponse } from 'next/server';
 
 const TYPES: Record<string, string> = {
-  jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif',
+  jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', pdf: 'application/pdf',
 };
 
 export async function GET(_request: Request, { params }: { params: { filename: string } }) {
-  const match = /^([0-9a-f-]{36})\.(jpg|png|webp|gif)$/i.exec(params.filename);
+  const match = /^([0-9a-f-]{36})\.(jpg|png|webp|gif|pdf)$/i.exec(params.filename);
   if (!match) return new NextResponse('Not found', { status: 404 });
   try {
     const directory = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Edit2, Trash2, Eye, EyeOff, Package } from 'lucide-react';
+import { Edit2, Trash2, Eye, EyeOff, Package, FileText } from 'lucide-react';
 
 export interface Product {
   id: string;
@@ -100,7 +100,9 @@ export default function ProductTable({
                 {/* Image */}
                 <td className="px-4 py-3">
                   <div className="w-12 h-12 bg-brand-surface border border-brand-border overflow-hidden relative shrink-0">
-                    {product.image_url && !imageErrors.has(product.id) ? (
+                    {product.image_url?.toLowerCase().endsWith('.pdf') ? (
+                      <a href={product.image_url} target="_blank" rel="noreferrer" className="absolute inset-0 flex items-center justify-center text-gold" aria-label={`Open ${product.name} PDF`}><FileText size={20} /></a>
+                    ) : product.image_url && !imageErrors.has(product.id) ? (
                       <Image
                         src={product.image_url}
                         alt={product.name}
@@ -207,7 +209,9 @@ export default function ProductTable({
           >
             <div className="flex items-start gap-3">
               <div className="w-14 h-14 bg-brand-surface border border-brand-border overflow-hidden relative shrink-0">
-                {product.image_url && !imageErrors.has(product.id) ? (
+                {product.image_url?.toLowerCase().endsWith('.pdf') ? (
+                  <a href={product.image_url} target="_blank" rel="noreferrer" className="absolute inset-0 flex items-center justify-center text-gold" aria-label={`Open ${product.name} PDF`}><FileText size={22} /></a>
+                ) : product.image_url && !imageErrors.has(product.id) ? (
                   <Image
                     src={product.image_url}
                     alt={product.name}
