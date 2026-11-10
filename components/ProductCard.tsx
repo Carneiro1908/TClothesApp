@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Clock, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -15,20 +15,8 @@ interface Product {
   status: 'active' | 'coming_soon' | 'hidden';
 }
 
-interface PlaceholderCategory {
-  name: string;
-  label: string;
-  comingSoon: true;
-}
-
-type CardItem = Product | PlaceholderCategory;
-
-function isPlaceholder(item: CardItem): item is PlaceholderCategory {
-  return 'comingSoon' in item;
-}
-
 interface ProductCardProps {
-  item: CardItem;
+  item: Product;
 }
 
 function formatPrice(price: number): string {
@@ -47,72 +35,6 @@ const categoryLabels: Record<string, string> = {
 
 export default function ProductCard({ item }: ProductCardProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  if (isPlaceholder(item)) {
-    return (
-      <div className="relative group bg-brand-card border border-brand-border overflow-hidden">
-        {/* Placeholder image area */}
-        <div className="aspect-[3/4] bg-brand-surface flex items-center justify-center relative overflow-hidden">
-          {/* Pattern background */}
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: `repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 10px,
-                rgba(201,168,76,0.3) 10px,
-                rgba(201,168,76,0.3) 11px
-              )`,
-            }}
-          />
-          <span className="relative text-5xl font-serif font-bold text-brand-border tracking-widest">
-            {item.name.charAt(0)}
-          </span>
-
-          {/* Coming Soon badge */}
-          <div className="absolute top-4 right-4">
-            <span className="flex items-center gap-1.5 bg-gold/10 border border-gold/30 text-gold text-xs font-medium tracking-widest uppercase px-3 py-1.5">
-              <Clock size={11} />
-              Coming Soon
-            </span>
-          </div>
-
-          {/* Diagonal ribbon */}
-          <div className="absolute -top-1 -left-1 w-24 h-24 overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full">
-              <div
-                className="absolute bg-gold/20 text-gold text-[9px] font-bold tracking-widest uppercase text-center"
-                style={{
-                  width: '120px',
-                  top: '20px',
-                  left: '-30px',
-                  transform: 'rotate(-45deg)',
-                  padding: '3px 0',
-                }}
-              >
-                Em Breve
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Info */}
-        <div className="p-4 border-t border-brand-border">
-          <p className="text-xs font-medium tracking-widest uppercase text-brand-muted mb-1">
-            {categoryLabels[item.name] || item.label}
-          </p>
-          <h3 className="text-base font-serif font-semibold text-white/50 mb-3">
-            {item.label}
-          </h3>
-          <div className="h-px gold-line mb-3" />
-          <p className="text-xs text-brand-muted/60 tracking-wide">
-            New collection arriving soon. Stay tuned.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const images = item.image_urls?.length ? item.image_urls : item.image_url ? [item.image_url] : [];
   const activeImage = images[Math.min(activeImageIndex, images.length - 1)];
 

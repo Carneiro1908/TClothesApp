@@ -10,13 +10,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'TClothes — Streetwear premium',
-  description:
-    'TClothes — Roupa urbana premium. Conheça a coleção Achilles Design, com lançamento previsto para 20 de novembro de 2026.',
+  description: 'TClothes — Roupa urbana premium da coleção Achilles Design.',
   keywords: ['TClothes', 'streetwear', 'Achilles Design', 'premium apparel', 't-shirts'],
   authors: [{ name: 'TClothes' }],
   openGraph: {
     title: 'TClothes — Streetwear premium',
-    description: 'Conheça a coleção Achilles Design. Lançamento previsto para 20 de novembro de 2026.',
+    description: 'Conheça a coleção Achilles Design da TClothes.',
     type: 'website',
   },
 };

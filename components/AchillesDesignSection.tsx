@@ -14,12 +14,6 @@ interface AchillesDesignSectionProps {
   products: Product[];
 }
 
-const PLACEHOLDER_CATEGORIES = [
-  { name: 'hoodies', label: 'Hoodies / Moletons', comingSoon: true as const },
-  { name: 'windbreakers', label: 'Windbreakers / Quispos', comingSoon: true as const },
-  { name: 'pants', label: 'Pants / Calças', comingSoon: true as const },
-];
-
 export default function AchillesDesignSection({ products }: AchillesDesignSectionProps) {
   const activeProducts = products.filter((p) => p.status === 'active');
 
@@ -62,24 +56,9 @@ export default function AchillesDesignSection({ products }: AchillesDesignSectio
             </div>
           ) : (
             <div className="text-center py-12 mb-16 border border-brand-border">
-              <p className="text-brand-muted text-sm">
-                No products available yet. Check back soon.
-              </p>
+              <p className="text-brand-muted text-sm">No products available yet.</p>
             </div>
           )}
-
-          <h3 className="text-xs font-medium tracking-[0.3em] uppercase text-brand-muted/40 mb-6 flex items-center gap-3">
-            <span className="h-px flex-1 bg-brand-border" />
-            Coming Soon
-            <span className="h-px flex-1 bg-brand-border" />
-          </h3>
-
-          {/* Coming soon categories grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {PLACEHOLDER_CATEGORIES.map((cat) => (
-              <ProductCard key={cat.name} item={cat} />
-            ))}
-          </div>
         </div>
       </div>
     </section>

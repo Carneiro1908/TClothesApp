@@ -75,10 +75,6 @@ export default function HeroSection() {
             A nossa história
           </button>
         </div>
-        <a href="#lancamento" className="mt-10 inline-flex flex-col items-center gap-1 border-t border-gold/30 pt-4 text-gold">
-          <span className="text-[10px] uppercase tracking-[0.3em] text-brand-muted">Lançamento previsto</span>
-          <time dateTime="2026-11-20" className="font-serif text-2xl tracking-widest">20.11.2026</time>
-        </a>
       </div>
 
       {/* Scroll indicator */}

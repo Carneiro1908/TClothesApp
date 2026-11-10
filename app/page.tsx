@@ -3,7 +3,6 @@ import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import AchillesDesignSection from '@/components/AchillesDesignSection';
 import Footer from '@/components/Footer';
-import NewArrivalsSection from '@/components/NewArrivalsSection';
 
 interface Product {
   id: string;
@@ -48,13 +47,6 @@ export default function HomePage() {
       <HeroSection />
 
       <AchillesDesignSection products={products} />
-      <NewArrivalsSection />
-
-      <section id="lancamento" className="border-y border-brand-border bg-brand-bg px-4 py-20 text-center">
-        <p className="mb-3 text-xs uppercase tracking-[0.4em] text-gold">Marque na agenda</p>
-        <h2 className="font-serif text-4xl font-bold text-white md:text-5xl">Lançamento previsto</h2>
-        <time dateTime="2026-11-20" className="mt-4 block font-serif text-3xl text-gold md:text-4xl">20 de novembro de 2026</time>
-      </section>
 
       {/* About Section */}
       <section id="about" className="py-24 md:py-32 bg-brand-surface">

@@ -7,8 +7,6 @@ import { Menu, X, Shield } from 'lucide-react';
 const links = [
   { href: '#inicio', label: 'Início' },
   { href: '#achilles-design', label: 'Coleção' },
-  { href: '#novidades', label: 'Novidades' },
-  { href: '#lancamento', label: 'Lançamento' },
   { href: '#about', label: 'Sobre' },
 ];
 
