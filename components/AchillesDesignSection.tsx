@@ -43,7 +43,7 @@ export default function AchillesDesignSection({ products }: AchillesDesignSectio
         <div className="mb-10">
           <h3 className="text-xs font-medium tracking-[0.3em] uppercase text-gold/60 mb-6 flex items-center gap-3">
             <span className="h-px flex-1 bg-brand-border" />
-            T-Shirts — Available Now
+            Store opening in 30/11
             <span className="h-px flex-1 bg-brand-border" />
           </h3>
 
